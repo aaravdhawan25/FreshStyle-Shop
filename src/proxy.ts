@@ -1,31 +1,9 @@
-import { auth } from "@/auth";
-import { NextResponse } from "next/server";
+import NextAuth from "next-auth";
+import { authConfig } from "@/auth.config";
 
-export default auth((req) => {
-  const { nextUrl } = req;
-  const isLoggedIn = !!req.auth;
-  const role = req.auth?.user?.role;
-
-  const isAdminRoute = nextUrl.pathname.startsWith("/dashboard");
-  const isAuthRoute =
-    nextUrl.pathname.startsWith("/login") ||
-    nextUrl.pathname.startsWith("/register");
-
-  if (isAdminRoute) {
-    if (!isLoggedIn) {
-      return NextResponse.redirect(new URL("/login", nextUrl));
-    }
-    if (role !== "ADMIN" && role !== "BARBER") {
-      return NextResponse.redirect(new URL("/", nextUrl));
-    }
-  }
-
-  if (isAuthRoute && isLoggedIn) {
-    return NextResponse.redirect(new URL("/book", nextUrl));
-  }
-
-  return NextResponse.next();
-});
+// Deliberately built from the Edge-safe authConfig only (no Prisma import here) —
+// this runs on the Edge runtime, which can't load Prisma's Node query engine.
+export default NextAuth(authConfig).auth;
 
 export const config = {
   matcher: ["/dashboard/:path*", "/login", "/register"],
