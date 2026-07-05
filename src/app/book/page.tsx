@@ -4,9 +4,9 @@ import { BookingWizard } from "./booking-wizard";
 export default async function BookPage({
   searchParams,
 }: {
-  searchParams: Promise<{ service?: string }>;
+  searchParams: Promise<{ service?: string; barber?: string }>;
 }) {
-  const { service } = await searchParams;
+  const { service, barber } = await searchParams;
 
   const [services, barbers] = await Promise.all([
     prisma.service.findMany({
@@ -42,6 +42,7 @@ export default async function BookPage({
           serviceIds: b.services.map((s) => s.id),
         }))}
         initialServiceId={service}
+        initialBarberId={barber}
       />
     </div>
   );

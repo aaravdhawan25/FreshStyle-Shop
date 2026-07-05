@@ -8,6 +8,7 @@ import { useSession, signOut } from "next-auth/react";
 const links = [
   { href: "/", label: "Home" },
   { href: "/services", label: "Services" },
+  { href: "/barbers", label: "Barbers" },
   { href: "/book", label: "Book Now" },
 ];
 

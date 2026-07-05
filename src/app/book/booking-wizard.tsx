@@ -37,10 +37,12 @@ export function BookingWizard({
   services,
   barbers,
   initialServiceId,
+  initialBarberId,
 }: {
   services: Service[];
   barbers: Barber[];
   initialServiceId?: string;
+  initialBarberId?: string;
 }) {
   const router = useRouter();
   const { status } = useSession();
@@ -49,7 +51,9 @@ export function BookingWizard({
   const [serviceId, setServiceId] = useState<string | undefined>(
     initialServiceId
   );
-  const [barberId, setBarberId] = useState<string | undefined>();
+  const [barberId, setBarberId] = useState<string | undefined>(
+    initialBarberId
+  );
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedSlot, setSelectedSlot] = useState<string | undefined>();
   const [slots, setSlots] = useState<string[]>([]);
@@ -199,8 +203,10 @@ export function BookingWizard({
                 key={s.id}
                 onClick={() => {
                   setServiceId(s.id);
-                  setBarberId(undefined);
-                  setStep(1);
+                  const presetBarberStillValid =
+                    barberId && barbers.find((b) => b.id === barberId)?.serviceIds.includes(s.id);
+                  if (!presetBarberStillValid) setBarberId(undefined);
+                  setStep(presetBarberStillValid ? 2 : 1);
                 }}
                 className={`rounded-xl border p-5 text-left transition hover:border-gold ${
                   serviceId === s.id ? "border-gold" : "border-border"
