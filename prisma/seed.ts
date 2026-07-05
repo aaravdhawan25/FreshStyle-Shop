@@ -3,6 +3,47 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
+const SERVICES: {
+  id: string;
+  name: string;
+  description?: string;
+  durationMin: number;
+  priceCents: number;
+}[] = [
+  { id: "svc-regular-haircut", name: "Regular Haircut", durationMin: 30, priceCents: 3500 },
+  { id: "svc-haircut-skin-fade", name: "Haircut Skin Fade", durationMin: 35, priceCents: 3500 },
+  { id: "svc-skin-fade-and-beard", name: "Skin Fade And Beard", durationMin: 45, priceCents: 4500 },
+  { id: "svc-taper-fade-and-beard", name: "Taper Fade & Beard", durationMin: 40, priceCents: 4500 },
+  { id: "svc-taper-and-shape-up", name: "Taper & Shape Up", durationMin: 30, priceCents: 3500 },
+  { id: "svc-shape-up-and-beard", name: "Shape Up And Beard", durationMin: 25, priceCents: 2500 },
+  { id: "svc-line-and-beard-fade", name: "Line & Beard Fade", durationMin: 25, priceCents: 2500 },
+  { id: "svc-seniors", name: "Seniors (Ages 60 & Over)", durationMin: 30, priceCents: 3300 },
+  { id: "svc-kids", name: "Kids (Age 8 & Under)", durationMin: 25, priceCents: 3000 },
+  { id: "svc-kids-skin-fade", name: "Kids Age 8 & Under (Skin Fade)", durationMin: 30, priceCents: 3000 },
+  {
+    id: "svc-vip-service",
+    name: "VIP Service Hair (Hair & Hot Towel Shave)",
+    description: "Hot towel, shave, massage.",
+    durationMin: 65,
+    priceCents: 7000,
+  },
+  { id: "svc-holiday-beard-haircuts", name: "Holiday Beard Haircuts", durationMin: 45, priceCents: 5000 },
+];
+
+const BARBER_NAMES = ["Jeanel", "Raj", "Flaco", "Oswald", "Jeffrey", "Pedro", "Frank"];
+
+// Matches Fresh Style Barbershop's real hours.
+// dayOfWeek: 0 = Sunday ... 6 = Saturday (matches JS Date#getDay()).
+const WEEKLY_HOURS: { dayOfWeek: number; startTime: string; endTime: string }[] = [
+  { dayOfWeek: 0, startTime: "10:00", endTime: "15:00" }, // Sunday
+  { dayOfWeek: 1, startTime: "10:00", endTime: "19:00" }, // Monday
+  { dayOfWeek: 2, startTime: "10:00", endTime: "19:00" }, // Tuesday
+  { dayOfWeek: 3, startTime: "10:00", endTime: "19:00" }, // Wednesday
+  { dayOfWeek: 4, startTime: "10:00", endTime: "19:00" }, // Thursday
+  { dayOfWeek: 5, startTime: "10:00", endTime: "19:00" }, // Friday
+  { dayOfWeek: 6, startTime: "09:00", endTime: "17:00" }, // Saturday
+];
+
 async function main() {
   const adminPassword = await bcrypt.hash("Admin123!", 10);
   const barberPassword = await bcrypt.hash("Barber123!", 10);
@@ -19,17 +60,6 @@ async function main() {
     },
   });
 
-  const marcusUser = await prisma.user.upsert({
-    where: { email: "marcus@freshstylebarbershop.com" },
-    update: {},
-    create: {
-      name: "Marcus Reed",
-      email: "marcus@freshstylebarbershop.com",
-      passwordHash: barberPassword,
-      role: "BARBER",
-    },
-  });
-
   const client = await prisma.user.upsert({
     where: { email: "client@example.com" },
     update: {},
@@ -41,92 +71,56 @@ async function main() {
     },
   });
 
-  const haircut = await prisma.service.upsert({
-    where: { id: "seed-haircut" },
-    update: {},
-    create: {
-      id: "seed-haircut",
-      name: "Classic Haircut",
-      description: "Precision cut, tailored to your style.",
-      durationMin: 30,
-      priceCents: 3500,
-    },
-  });
+  const services = await Promise.all(
+    SERVICES.map((s) =>
+      prisma.service.upsert({
+        where: { id: s.id },
+        update: {
+          name: s.name,
+          description: s.description,
+          durationMin: s.durationMin,
+          priceCents: s.priceCents,
+        },
+        create: s,
+      })
+    )
+  );
 
-  const beardTrim = await prisma.service.upsert({
-    where: { id: "seed-beard-trim" },
-    update: {},
-    create: {
-      id: "seed-beard-trim",
-      name: "Beard Trim",
-      description: "Sharp lines and a clean shape-up.",
-      durationMin: 20,
-      priceCents: 2000,
-    },
-  });
+  const barbers = await Promise.all(
+    BARBER_NAMES.map(async (name) => {
+      const email = `${name.toLowerCase()}@freshstylebarbershop.com`;
+      const user = await prisma.user.upsert({
+        where: { email },
+        update: {},
+        create: { name, email, passwordHash: barberPassword, role: "BARBER" },
+      });
 
-  const hotTowelShave = await prisma.service.upsert({
-    where: { id: "seed-hot-towel-shave" },
-    update: {},
-    create: {
-      id: "seed-hot-towel-shave",
-      name: "Hot Towel Shave",
-      description: "Traditional straight-razor shave with hot towel prep.",
-      durationMin: 45,
-      priceCents: 4500,
-    },
-  });
+      return prisma.barber.upsert({
+        where: { userId: user.id },
+        update: { services: { set: services.map((s) => ({ id: s.id })) } },
+        create: {
+          userId: user.id,
+          services: { connect: services.map((s) => ({ id: s.id })) },
+        },
+      });
+    })
+  );
 
-  const cutAndBeard = await prisma.service.upsert({
-    where: { id: "seed-cut-and-beard" },
-    update: {},
-    create: {
-      id: "seed-cut-and-beard",
-      name: "Haircut + Beard Combo",
-      description: "Full service cut and beard shape-up.",
-      durationMin: 50,
-      priceCents: 5000,
-    },
-  });
-
-  const marcus = await prisma.barber.upsert({
-    where: { userId: marcusUser.id },
-    update: {},
-    create: {
-      userId: marcusUser.id,
-      bio: "10 years behind the chair, specializing in fades and beard work.",
-      services: {
-        connect: [
-          { id: haircut.id },
-          { id: beardTrim.id },
-          { id: hotTowelShave.id },
-          { id: cutAndBeard.id },
-        ],
-      },
-    },
-  });
-
-  // Matches Fresh Style Barbershop's real hours.
-  // dayOfWeek: 0 = Sunday ... 6 = Saturday (matches JS Date#getDay()).
-  const weeklyHours: { dayOfWeek: number; startTime: string; endTime: string }[] = [
-    { dayOfWeek: 0, startTime: "10:00", endTime: "15:00" }, // Sunday
-    { dayOfWeek: 1, startTime: "10:00", endTime: "19:00" }, // Monday
-    { dayOfWeek: 2, startTime: "10:00", endTime: "19:00" }, // Tuesday
-    { dayOfWeek: 3, startTime: "10:00", endTime: "19:00" }, // Wednesday
-    { dayOfWeek: 4, startTime: "10:00", endTime: "19:00" }, // Thursday
-    { dayOfWeek: 5, startTime: "10:00", endTime: "19:00" }, // Friday
-    { dayOfWeek: 6, startTime: "09:00", endTime: "17:00" }, // Saturday
-  ];
-
-  for (const { dayOfWeek, startTime, endTime } of weeklyHours) {
-    await prisma.availability.upsert({
-      where: { barberId_dayOfWeek: { barberId: marcus.id, dayOfWeek } },
-      update: { startTime, endTime },
-      create: { barberId: marcus.id, dayOfWeek, startTime, endTime },
-    });
+  for (const barber of barbers) {
+    for (const { dayOfWeek, startTime, endTime } of WEEKLY_HOURS) {
+      await prisma.availability.upsert({
+        where: { barberId_dayOfWeek: { barberId: barber.id, dayOfWeek } },
+        update: { startTime, endTime },
+        create: { barberId: barber.id, dayOfWeek, startTime, endTime },
+      });
+    }
   }
 
-  console.log({ admin: admin.email, barber: marcusUser.email, client: client.email });
+  console.log({
+    admin: admin.email,
+    barbers: BARBER_NAMES.map((n) => `${n.toLowerCase()}@freshstylebarbershop.com`),
+    client: client.email,
+  });
 }
 
 main()
