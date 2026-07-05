@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { BUSINESS, HOURS } from "@/lib/business";
 
 const today = () => new Date().getDay();
@@ -9,7 +10,16 @@ export function Footer() {
     <footer className="border-t border-border bg-surface">
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-6 py-12 sm:grid-cols-3">
         <div>
-          <p className="font-display text-lg text-gold-soft">{BUSINESS.name}</p>
+          <div className="flex items-center gap-3">
+            <Image
+              src="/logo-mark.png"
+              alt="Fresh Style Barbershop logo"
+              width={36}
+              height={36}
+              className="rounded-full"
+            />
+            <p className="font-display text-lg text-gold-soft">{BUSINESS.name}</p>
+          </div>
           <p className="mt-2 text-sm text-muted">
             <a href={BUSINESS.mapsHref} target="_blank" rel="noopener noreferrer" className="hover:text-gold-soft">
               {BUSINESS.address}
