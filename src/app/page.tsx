@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
+import { BUSINESS, HOURS } from "@/lib/business";
 
 export default async function Home() {
   const services = await prisma.service.findMany({
@@ -87,6 +88,40 @@ export default async function Home() {
           >
             Book Now
           </Link>
+        </div>
+      </section>
+
+      <section className="mx-auto w-full max-w-6xl px-6 py-20">
+        <div className="grid grid-cols-1 gap-10 rounded-2xl border border-border bg-surface p-8 sm:grid-cols-2">
+          <div>
+            <h2 className="font-display text-2xl text-foreground">Visit Us</h2>
+            <p className="mt-3 text-muted">
+              <a
+                href={BUSINESS.mapsHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-gold-soft"
+              >
+                {BUSINESS.address}
+              </a>
+            </p>
+            <p className="mt-1 text-muted">
+              <a href={BUSINESS.phoneHref} className="hover:text-gold-soft">
+                {BUSINESS.phone}
+              </a>
+            </p>
+          </div>
+          <div>
+            <h2 className="font-display text-2xl text-foreground">Hours</h2>
+            <ul className="mt-3 space-y-1 text-sm">
+              {HOURS.map((h) => (
+                <li key={h.day} className="flex justify-between gap-6 text-muted">
+                  <span>{h.day}</span>
+                  <span>{h.hours}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </section>
     </div>

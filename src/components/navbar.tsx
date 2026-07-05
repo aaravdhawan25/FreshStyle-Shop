@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 
@@ -18,12 +19,22 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <Link href="/" className="flex items-baseline gap-2">
-          <span className="font-display text-xl tracking-wide text-gold-soft">
-            FRESH STYLE
-          </span>
-          <span className="text-xs uppercase tracking-[0.3em] text-muted">
-            Barbershop
+        <Link href="/" className="flex items-center gap-3">
+          <Image
+            src="/logo-mark.png"
+            alt="Fresh Style Barbershop logo"
+            width={40}
+            height={40}
+            className="rounded-full"
+            priority
+          />
+          <span className="flex flex-col leading-tight">
+            <span className="font-display text-lg tracking-wide text-gold-soft">
+              FRESH STYLE
+            </span>
+            <span className="text-[10px] uppercase tracking-[0.3em] text-muted">
+              Barbershop
+            </span>
           </span>
         </Link>
 

@@ -106,17 +106,23 @@ async function main() {
     },
   });
 
-  // Tue-Sat, 9am-6pm
-  for (const dayOfWeek of [2, 3, 4, 5, 6]) {
+  // Matches Fresh Style Barbershop's real hours.
+  // dayOfWeek: 0 = Sunday ... 6 = Saturday (matches JS Date#getDay()).
+  const weeklyHours: { dayOfWeek: number; startTime: string; endTime: string }[] = [
+    { dayOfWeek: 0, startTime: "10:00", endTime: "15:00" }, // Sunday
+    { dayOfWeek: 1, startTime: "10:00", endTime: "19:00" }, // Monday
+    { dayOfWeek: 2, startTime: "10:00", endTime: "19:00" }, // Tuesday
+    { dayOfWeek: 3, startTime: "10:00", endTime: "19:00" }, // Wednesday
+    { dayOfWeek: 4, startTime: "10:00", endTime: "19:00" }, // Thursday
+    { dayOfWeek: 5, startTime: "10:00", endTime: "19:00" }, // Friday
+    { dayOfWeek: 6, startTime: "09:00", endTime: "17:00" }, // Saturday
+  ];
+
+  for (const { dayOfWeek, startTime, endTime } of weeklyHours) {
     await prisma.availability.upsert({
       where: { barberId_dayOfWeek: { barberId: marcus.id, dayOfWeek } },
-      update: {},
-      create: {
-        barberId: marcus.id,
-        dayOfWeek,
-        startTime: "09:00",
-        endTime: "18:00",
-      },
+      update: { startTime, endTime },
+      create: { barberId: marcus.id, dayOfWeek, startTime, endTime },
     });
   }
 
