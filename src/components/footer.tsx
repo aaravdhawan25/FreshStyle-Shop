@@ -1,10 +1,50 @@
+import { BUSINESS, HOURS } from "@/lib/business";
+
+const today = () => new Date().getDay();
+
 export function Footer() {
+  const todayIndex = today();
+
   return (
     <footer className="border-t border-border bg-surface">
-      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-10 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
-        <p className="font-display text-base text-gold-soft">FRESH STYLE BARBERSHOP</p>
-        <p>123 Main Street, Your City &middot; (555) 010-2929</p>
-        <p>&copy; {new Date().getFullYear()} Fresh Style Barbershop. All rights reserved.</p>
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-6 py-12 sm:grid-cols-3">
+        <div>
+          <p className="font-display text-lg text-gold-soft">{BUSINESS.name}</p>
+          <p className="mt-2 text-sm text-muted">
+            <a href={BUSINESS.mapsHref} target="_blank" rel="noopener noreferrer" className="hover:text-gold-soft">
+              {BUSINESS.address}
+            </a>
+          </p>
+          <p className="mt-1 text-sm text-muted">
+            <a href={BUSINESS.phoneHref} className="hover:text-gold-soft">
+              {BUSINESS.phone}
+            </a>
+          </p>
+        </div>
+
+        <div>
+          <p className="text-xs uppercase tracking-wide text-muted">Hours</p>
+          <ul className="mt-2 space-y-1 text-sm">
+            {HOURS.map((h, i) => (
+              <li
+                key={h.day}
+                className={`flex justify-between gap-6 ${
+                  i === todayIndex ? "text-gold-soft" : "text-muted"
+                }`}
+              >
+                <span>{h.day}</span>
+                <span>{h.hours}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="flex flex-col justify-between text-sm text-muted sm:items-end sm:text-right">
+          <p>Est. 2017</p>
+          <p className="mt-4 sm:mt-0">
+            &copy; {new Date().getFullYear()} {BUSINESS.name}. All rights reserved.
+          </p>
+        </div>
       </div>
     </footer>
   );

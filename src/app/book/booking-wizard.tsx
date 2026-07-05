@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { formatPrice } from "@/lib/format";
@@ -57,6 +57,12 @@ export function BookingWizard({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [slotTakenNotice, setSlotTakenNotice] = useState(false);
+
+  const selectedSlotRef = useRef(selectedSlot);
+  useEffect(() => {
+    selectedSlotRef.current = selectedSlot;
+  }, [selectedSlot]);
 
   const dates = useMemo(() => nextNDates(14), []);
 
@@ -68,6 +74,26 @@ export function BookingWizard({
   const service = services.find((s) => s.id === serviceId);
   const barber = barbers.find((b) => b.id === barberId);
 
+  // Polled (not just fetched once) so a slot someone else just booked
+  // disappears for everyone looking at this date, without a manual refresh.
+  const fetchSlots = useCallback(
+    async (dateStr: string, currentBarberId: string, currentServiceId: string) => {
+      const res = await fetch(
+        `/api/availability?barberId=${currentBarberId}&serviceId=${currentServiceId}&date=${dateStr}`
+      );
+      const data = await res.json();
+      const freshSlots: string[] = data.slots ?? [];
+      setSlots(freshSlots);
+
+      if (selectedSlotRef.current && !freshSlots.includes(selectedSlotRef.current)) {
+        setSelectedSlot(undefined);
+        setSlotTakenNotice(true);
+        setStep((s) => (s === 3 ? 2 : s));
+      }
+    },
+    []
+  );
+
   useEffect(() => {
     if (!barberId || !serviceId || !selectedDate) {
       return;
@@ -78,14 +104,16 @@ export function BookingWizard({
     setLoadingSlots(true);
     setSelectedSlot(undefined);
     setSlots([]);
+    setSlotTakenNotice(false);
 
-    fetch(
-      `/api/availability?barberId=${barberId}&serviceId=${serviceId}&date=${dateStr}`
-    )
-      .then((res) => res.json())
-      .then((data) => setSlots(data.slots ?? []))
-      .finally(() => setLoadingSlots(false));
-  }, [barberId, serviceId, selectedDate]);
+    fetchSlots(dateStr, barberId, serviceId).finally(() => setLoadingSlots(false));
+
+    const interval = setInterval(() => {
+      fetchSlots(dateStr, barberId, serviceId);
+    }, 12_000);
+
+    return () => clearInterval(interval);
+  }, [barberId, serviceId, selectedDate, fetchSlots]);
 
   async function handleConfirm() {
     if (status !== "authenticated") {
@@ -239,6 +267,11 @@ export function BookingWizard({
             </div>
 
             <div className="mt-6">
+              {slotTakenNotice && (
+                <p className="mb-3 text-sm text-amber-400">
+                  That time was just booked by someone else. Pick another.
+                </p>
+              )}
               {loadingSlots && (
                 <p className="text-sm text-muted">Loading available times...</p>
               )}
@@ -254,6 +287,7 @@ export function BookingWizard({
                       key={slot}
                       onClick={() => {
                         setSelectedSlot(slot);
+                        setSlotTakenNotice(false);
                         setStep(3);
                       }}
                       className={`rounded-lg border px-3 py-2 text-sm transition hover:border-gold ${
