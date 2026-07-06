@@ -7,12 +7,30 @@
 
 export const SHOP_TIME_ZONE = "America/New_York";
 
+const WEEKDAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
 // A specific calendar date (no time component) has the same day-of-week
 // everywhere on Earth, so this doesn't need timezone conversion — just
 // avoid parsing it in a way that depends on the runtime's local zone.
 export function getDayOfWeek(dateStr: string): number {
   const [y, m, d] = dateStr.split("-").map(Number);
   return new Date(Date.UTC(y, m - 1, d, 12)).getUTCDay();
+}
+
+export function weekdayShort(dateStr: string): string {
+  return WEEKDAY_SHORT[getDayOfWeek(dateStr)];
+}
+
+// "YYYY-MM-DD" arithmetic that never touches the runtime's local timezone.
+export function addDaysToDateStr(dateStr: string, days: number): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}
+
+// "Today" as the shop sees it — a browsing device in another timezone
+// (or a UTC-clocked server) must not be allowed to disagree with this.
+export function getTodayInZone(timeZone: string = SHOP_TIME_ZONE): string {
+  return formatDateInZone(new Date(), timeZone);
 }
 
 function getUtcOffset(dateStr: string, timeZone: string): string {

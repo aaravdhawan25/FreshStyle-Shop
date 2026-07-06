@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { formatPrice } from "@/lib/format";
+import { SHOP_TIME_ZONE, addDaysToDateStr, getTodayInZone, weekdayShort } from "@/lib/timezone";
 
 type Service = {
   id: string;
@@ -21,16 +22,12 @@ type Barber = {
 
 const STEPS = ["Service", "Barber", "Date & Time", "Confirm"] as const;
 
-function nextNDates(n: number): Date[] {
-  const dates: Date[] = [];
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  for (let i = 0; i < n; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    dates.push(d);
-  }
-  return dates;
+// Dates offered for booking are always the shop's own calendar days — a
+// customer browsing from another timezone must see the same list a
+// customer standing in the shop would see, not their own device's "today".
+function nextNDateStrs(n: number): string[] {
+  const today = getTodayInZone();
+  return Array.from({ length: n }, (_, i) => addDaysToDateStr(today, i));
 }
 
 export function BookingWizard({
@@ -54,7 +51,7 @@ export function BookingWizard({
   const [barberId, setBarberId] = useState<string | undefined>(
     initialBarberId
   );
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [selectedDateStr, setSelectedDateStr] = useState<string | undefined>();
   const [selectedSlot, setSelectedSlot] = useState<string | undefined>();
   const [slots, setSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -68,7 +65,7 @@ export function BookingWizard({
     selectedSlotRef.current = selectedSlot;
   }, [selectedSlot]);
 
-  const dates = useMemo(() => nextNDates(14), []);
+  const dates = useMemo(() => nextNDateStrs(14), []);
 
   const availableBarbers = useMemo(
     () => barbers.filter((b) => !serviceId || b.serviceIds.includes(serviceId)),
@@ -99,25 +96,24 @@ export function BookingWizard({
   );
 
   useEffect(() => {
-    if (!barberId || !serviceId || !selectedDate) {
+    if (!barberId || !serviceId || !selectedDateStr) {
       return;
     }
 
-    const dateStr = selectedDate.toISOString().slice(0, 10);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- resetting selection state for a new fetch triggered by dependency change
     setLoadingSlots(true);
     setSelectedSlot(undefined);
     setSlots([]);
     setSlotTakenNotice(false);
 
-    fetchSlots(dateStr, barberId, serviceId).finally(() => setLoadingSlots(false));
+    fetchSlots(selectedDateStr, barberId, serviceId).finally(() => setLoadingSlots(false));
 
     const interval = setInterval(() => {
-      fetchSlots(dateStr, barberId, serviceId);
+      fetchSlots(selectedDateStr, barberId, serviceId);
     }, 12_000);
 
     return () => clearInterval(interval);
-  }, [barberId, serviceId, selectedDate, fetchSlots]);
+  }, [barberId, serviceId, selectedDateStr, fetchSlots]);
 
   async function handleConfirm() {
     if (status !== "authenticated") {
@@ -165,6 +161,7 @@ export function BookingWizard({
               day: "numeric",
               hour: "numeric",
               minute: "2-digit",
+              timeZone: SHOP_TIME_ZONE,
             })}
           .
         </p>
@@ -252,21 +249,20 @@ export function BookingWizard({
         {step === 2 && (
           <div>
             <div className="flex gap-2 overflow-x-auto pb-3">
-              {dates.map((d) => {
-                const isSelected =
-                  selectedDate?.toDateString() === d.toDateString();
+              {dates.map((dateStr) => {
+                const isSelected = selectedDateStr === dateStr;
                 return (
                   <button
-                    key={d.toISOString()}
-                    onClick={() => setSelectedDate(d)}
+                    key={dateStr}
+                    onClick={() => setSelectedDateStr(dateStr)}
                     className={`flex min-w-[64px] flex-col items-center rounded-xl border px-3 py-2 text-sm transition hover:border-gold ${
                       isSelected ? "border-gold text-gold-soft" : "border-border"
                     }`}
                   >
-                    <span className="text-xs text-muted">
-                      {d.toLocaleDateString("en-US", { weekday: "short" })}
+                    <span className="text-xs text-muted">{weekdayShort(dateStr)}</span>
+                    <span className="font-display text-base">
+                      {Number(dateStr.slice(8, 10))}
                     </span>
-                    <span className="font-display text-base">{d.getDate()}</span>
                   </button>
                 );
               })}
@@ -281,7 +277,7 @@ export function BookingWizard({
               {loadingSlots && (
                 <p className="text-sm text-muted">Loading available times...</p>
               )}
-              {!loadingSlots && selectedDate && slots.length === 0 && (
+              {!loadingSlots && selectedDateStr && slots.length === 0 && (
                 <p className="text-sm text-muted">
                   No open times on this day. Try another date.
                 </p>
@@ -303,6 +299,7 @@ export function BookingWizard({
                       {new Date(slot).toLocaleTimeString("en-US", {
                         hour: "numeric",
                         minute: "2-digit",
+                        timeZone: SHOP_TIME_ZONE,
                       })}
                     </button>
                   ))}
@@ -332,6 +329,7 @@ export function BookingWizard({
                     day: "numeric",
                     hour: "numeric",
                     minute: "2-digit",
+                    timeZone: SHOP_TIME_ZONE,
                   })}
                 </dd>
               </div>

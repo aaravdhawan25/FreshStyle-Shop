@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import type { AppointmentStatus } from "@prisma/client";
 import { updateAppointmentStatus } from "./actions";
+import { SHOP_TIME_ZONE } from "@/lib/timezone";
 
 const statusStyles: Record<AppointmentStatus, string> = {
   PENDING: "text-amber-400",
@@ -48,6 +49,7 @@ export function AppointmentRow({
           day: "numeric",
           hour: "numeric",
           minute: "2-digit",
+          timeZone: SHOP_TIME_ZONE,
         })}
       </td>
       <td className="px-6 py-4">{formattedPrice}</td>
