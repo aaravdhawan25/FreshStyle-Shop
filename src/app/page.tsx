@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
 import { BUSINESS, HOURS } from "@/lib/business";
+import { ScrollHero } from "@/components/hero/scroll-hero";
 
 export default async function Home() {
   const services = await prisma.service.findMany({
@@ -12,36 +13,7 @@ export default async function Home() {
 
   return (
     <div className="flex flex-col">
-      <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-surface to-background">
-        <div className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-6 py-28">
-          <span className="text-xs uppercase tracking-[0.4em] text-gold">
-            Est. Precision Grooming
-          </span>
-          <h1 className="font-display max-w-2xl text-5xl leading-tight text-foreground sm:text-6xl">
-            Sharp cuts.{" "}
-            <span className="gold-gradient-text">Sharper standards.</span>
-          </h1>
-          <p className="max-w-xl text-lg text-muted">
-            Fresh Style Barbershop brings old-world craftsmanship to modern
-            grooming. Book your chair online in under a minute — no calls,
-            no waiting.
-          </p>
-          <div className="flex flex-wrap gap-4 pt-4">
-            <Link
-              href="/book"
-              className="rounded-full bg-gold px-8 py-3 text-sm font-semibold text-black transition hover:bg-gold-soft"
-            >
-              Book an Appointment
-            </Link>
-            <Link
-              href="/services"
-              className="rounded-full border border-border px-8 py-3 text-sm font-semibold text-foreground transition hover:border-gold"
-            >
-              View Services
-            </Link>
-          </div>
-        </div>
-      </section>
+      <ScrollHero />
 
       <section className="mx-auto w-full max-w-6xl px-6 py-20">
         <div className="mb-10 flex items-end justify-between">
