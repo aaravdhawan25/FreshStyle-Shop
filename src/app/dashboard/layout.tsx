@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 const navItems = [
   { href: "/dashboard", label: "Overview" },
   { href: "/dashboard/appointments", label: "Appointments" },
+  { href: "/dashboard/barbers", label: "Barbers" },
 ];
 
 export default async function DashboardLayout({
