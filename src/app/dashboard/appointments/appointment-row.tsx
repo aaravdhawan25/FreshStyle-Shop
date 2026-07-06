@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import type { AppointmentStatus } from "@prisma/client";
 import { updateAppointmentStatus } from "./actions";
 import { SHOP_TIME_ZONE } from "@/lib/timezone";
+import { StatusIcon } from "@/components/status-icon";
 
 const statusStyles: Record<AppointmentStatus, string> = {
   PENDING: "text-amber-400",
@@ -55,6 +56,9 @@ export function AppointmentRow({
       <td className="px-6 py-4">{formattedPrice}</td>
       <td className={`px-6 py-4 font-medium ${statusStyles[appointment.status]}`}>
         {appointment.status}
+      </td>
+      <td className="px-6 py-4 text-center">
+        <StatusIcon status={appointment.status} />
       </td>
       <td className="px-6 py-4">
         <select

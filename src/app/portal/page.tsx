@@ -22,33 +22,41 @@ export default async function PortalPage() {
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 6);
 
-  const [todaysAppointments, weekCount, nextAppointment] = await Promise.all([
-    prisma.appointment.findMany({
-      where: {
-        barberId: barber.id,
-        startTime: { gte: todayStart, lt: todayEnd },
-        status: { not: "CANCELLED" },
-      },
-      include: { client: true, service: true },
-      orderBy: { startTime: "asc" },
-    }),
-    prisma.appointment.count({
-      where: {
-        barberId: barber.id,
-        startTime: { gte: weekAgo },
-        status: { in: ["PENDING", "CONFIRMED", "COMPLETED"] },
-      },
-    }),
-    prisma.appointment.findFirst({
-      where: {
-        barberId: barber.id,
-        status: { in: ["PENDING", "CONFIRMED"] },
-        startTime: { gte: new Date() },
-      },
-      include: { client: true, service: true },
-      orderBy: { startTime: "asc" },
-    }),
-  ]);
+  const [todaysAppointments, weekCount, nextAppointment, cancellationsCount] =
+    await Promise.all([
+      prisma.appointment.findMany({
+        where: {
+          barberId: barber.id,
+          startTime: { gte: todayStart, lt: todayEnd },
+          status: { not: "CANCELLED" },
+        },
+        include: { client: true, service: true },
+        orderBy: { startTime: "asc" },
+      }),
+      prisma.appointment.count({
+        where: {
+          barberId: barber.id,
+          startTime: { gte: weekAgo },
+          status: { in: ["PENDING", "CONFIRMED", "COMPLETED"] },
+        },
+      }),
+      prisma.appointment.findFirst({
+        where: {
+          barberId: barber.id,
+          status: { in: ["PENDING", "CONFIRMED"] },
+          startTime: { gte: new Date() },
+        },
+        include: { client: true, service: true },
+        orderBy: { startTime: "asc" },
+      }),
+      prisma.appointment.count({
+        where: {
+          barberId: barber.id,
+          startTime: { gte: weekAgo },
+          status: "CANCELLED",
+        },
+      }),
+    ]);
 
   const todaysRevenueCents = todaysAppointments
     .filter((a) => a.status !== "NO_SHOW")
@@ -90,7 +98,7 @@ export default async function PortalPage() {
         </div>
       )}
 
-      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <div className="rounded-2xl border border-border bg-surface p-6">
           <p className="text-xs uppercase tracking-wide text-muted">Today</p>
           <p className="mt-2 font-display text-3xl text-gold-soft">
@@ -111,6 +119,15 @@ export default async function PortalPage() {
             {formatPrice(todaysRevenueCents)}
           </p>
           <p className="text-sm text-muted">estimated</p>
+        </div>
+        <div className="rounded-2xl border border-border bg-surface p-6">
+          <p className="text-xs uppercase tracking-wide text-muted">
+            Cancellations
+          </p>
+          <p className="mt-2 font-display text-3xl text-gold-soft">
+            {cancellationsCount}
+          </p>
+          <p className="text-sm text-muted">this week</p>
         </div>
       </div>
 

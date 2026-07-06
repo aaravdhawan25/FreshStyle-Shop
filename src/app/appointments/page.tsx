@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { SHOP_TIME_ZONE } from "@/lib/timezone";
 import { Countdown } from "@/components/countdown";
+import { CancelAppointmentButton } from "./cancel-appointment-button";
 
 export default async function MyAppointmentsPage() {
   const session = await auth();
@@ -54,6 +55,12 @@ export default async function MyAppointmentsPage() {
           <div className="mt-6">
             <Countdown targetIso={next.startTime.toISOString()} />
           </div>
+          <div className="mt-6 flex justify-center">
+            <CancelAppointmentButton
+              appointmentId={next.id}
+              startTimeIso={next.startTime.toISOString()}
+            />
+          </div>
         </div>
       )}
 
@@ -66,20 +73,26 @@ export default async function MyAppointmentsPage() {
             {rest.map((appt) => (
               <div
                 key={appt.id}
-                className="flex items-center justify-between px-6 py-4"
+                className="flex flex-wrap items-center justify-between gap-4 px-6 py-4"
               >
-                <p className="text-foreground">
-                  {appt.service.name} with {appt.barber.user.name}
-                </p>
-                <p className="text-sm text-gold-soft">
-                  {appt.startTime.toLocaleString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    hour: "numeric",
-                    minute: "2-digit",
-                    timeZone: SHOP_TIME_ZONE,
-                  })}
-                </p>
+                <div>
+                  <p className="text-foreground">
+                    {appt.service.name} with {appt.barber.user.name}
+                  </p>
+                  <p className="text-sm text-gold-soft">
+                    {appt.startTime.toLocaleString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                      timeZone: SHOP_TIME_ZONE,
+                    })}
+                  </p>
+                </div>
+                <CancelAppointmentButton
+                  appointmentId={appt.id}
+                  startTimeIso={appt.startTime.toISOString()}
+                />
               </div>
             ))}
           </div>
