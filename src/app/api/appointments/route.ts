@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { bookAppointmentSchema } from "@/lib/validation";
 import { getAvailableSlots } from "@/lib/availability";
+import { formatDateInZone } from "@/lib/timezone";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -28,7 +29,9 @@ export async function POST(req: NextRequest) {
   }
 
   const start = new Date(startTime);
-  const dateStr = start.toISOString().slice(0, 10);
+  // Use the shop's calendar date, not UTC's — a 6pm Eastern slot can already
+  // be "tomorrow" in UTC, which would look up the wrong day's availability.
+  const dateStr = formatDateInZone(start);
 
   // Re-check availability server-side to prevent race conditions / stale slots
   const validSlots = await getAvailableSlots(barberId, serviceId, dateStr);

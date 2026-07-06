@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
+import { SHOP_TIME_ZONE, formatDateInZone, zonedDayBounds } from "@/lib/timezone";
 
 export default async function DashboardOverview() {
   const session = await auth();
@@ -10,10 +11,9 @@ export default async function DashboardOverview() {
     ? null
     : await prisma.barber.findUnique({ where: { userId: session!.user.id } });
 
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const todayEnd = new Date(todayStart);
-  todayEnd.setDate(todayEnd.getDate() + 1);
+  // "Today" means today in the shop's timezone, not the server's — Vercel
+  // runs in UTC, which would otherwise roll the day over hours too early/late.
+  const { start: todayStart, end: todayEnd } = zonedDayBounds(formatDateInZone(new Date()));
 
   const where = {
     startTime: { gte: todayStart, lt: todayEnd },
@@ -100,6 +100,7 @@ export default async function DashboardOverview() {
                 {appt.startTime.toLocaleTimeString("en-US", {
                   hour: "numeric",
                   minute: "2-digit",
+                  timeZone: SHOP_TIME_ZONE,
                 })}
               </p>
               <p className="text-xs uppercase text-muted">{appt.status}</p>

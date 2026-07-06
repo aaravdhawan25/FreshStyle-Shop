@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getDayOfWeek, zonedDayBounds, zonedTimeToUtc } from "@/lib/timezone";
 
 const SLOT_INCREMENT_MIN = 15;
 
@@ -12,10 +13,10 @@ export async function getAvailableSlots(
   serviceId: string,
   dateStr: string
 ): Promise<string[]> {
-  const date = new Date(`${dateStr}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return [];
+  if (Number.isNaN(new Date(`${dateStr}T00:00:00Z`).getTime())) return [];
 
-  const dayOfWeek = date.getDay();
+  const dayOfWeek = getDayOfWeek(dateStr);
+  const { start: dayStartUtc, end: dayEndUtc } = zonedDayBounds(dateStr);
 
   const [service, availability, timeOffBlocks, existingAppointments] =
     await Promise.all([
@@ -26,18 +27,15 @@ export async function getAvailableSlots(
       prisma.timeOff.findMany({
         where: {
           barberId,
-          startsAt: { lt: new Date(`${dateStr}T23:59:59`) },
-          endsAt: { gt: new Date(`${dateStr}T00:00:00`) },
+          startsAt: { lt: dayEndUtc },
+          endsAt: { gt: dayStartUtc },
         },
       }),
       prisma.appointment.findMany({
         where: {
           barberId,
           status: { in: ["PENDING", "CONFIRMED"] },
-          startTime: {
-            gte: new Date(`${dateStr}T00:00:00`),
-            lt: new Date(`${dateStr}T23:59:59`),
-          },
+          startTime: { gte: dayStartUtc, lt: dayEndUtc },
         },
         select: { startTime: true, endTime: true },
       }),
@@ -46,8 +44,12 @@ export async function getAvailableSlots(
   if (!service || !availability) return [];
 
   const duration = service.durationMin;
-  const dayStart = timeStringToMinutes(availability.startTime);
-  const dayEnd = timeStringToMinutes(availability.endTime);
+  // Anchor "shop opens" to the correct UTC instant for this specific date
+  // (DST-aware), then walk the rest of the day in plain minute offsets —
+  // safe since shop hours never span a DST transition (those happen at 2am).
+  const openUtc = zonedTimeToUtc(dateStr, availability.startTime);
+  const windowMinutes =
+    timeStringToMinutes(availability.endTime) - timeStringToMinutes(availability.startTime);
 
   const busyRanges = [
     ...existingAppointments.map((a) => ({
@@ -61,12 +63,11 @@ export async function getAvailableSlots(
   const slots: string[] = [];
 
   for (
-    let minutes = dayStart;
-    minutes + duration <= dayEnd;
-    minutes += SLOT_INCREMENT_MIN
+    let offsetMin = 0;
+    offsetMin + duration <= windowMinutes;
+    offsetMin += SLOT_INCREMENT_MIN
   ) {
-    const slotStart = new Date(date);
-    slotStart.setHours(0, minutes, 0, 0);
+    const slotStart = new Date(openUtc.getTime() + offsetMin * 60_000);
     const slotEnd = new Date(slotStart.getTime() + duration * 60_000);
 
     if (slotStart < now) continue;
