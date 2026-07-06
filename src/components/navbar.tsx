@@ -15,7 +15,8 @@ const links = [
 export function Navbar() {
   const { data: session, status } = useSession();
   const [open, setOpen] = useState(false);
-  const isStaff = session?.user?.role === "ADMIN" || session?.user?.role === "BARBER";
+  const isAdmin = session?.user?.role === "ADMIN";
+  const isBarber = session?.user?.role === "BARBER";
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur">
@@ -49,12 +50,28 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
-          {isStaff && (
+          {status === "authenticated" && (
+            <Link
+              href="/appointments"
+              className="text-sm font-medium text-foreground/80 transition hover:text-gold-soft"
+            >
+              My Appointments
+            </Link>
+          )}
+          {isAdmin && (
             <Link
               href="/dashboard"
               className="text-sm font-medium text-foreground/80 transition hover:text-gold-soft"
             >
               Dashboard
+            </Link>
+          )}
+          {isBarber && (
+            <Link
+              href="/portal"
+              className="text-sm font-medium text-foreground/80 transition hover:text-gold-soft"
+            >
+              Barber Portal
             </Link>
           )}
         </nav>
@@ -119,9 +136,19 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
-            {isStaff && (
+            {status === "authenticated" && (
+              <Link href="/appointments" onClick={() => setOpen(false)} className="text-sm font-medium text-foreground/80">
+                My Appointments
+              </Link>
+            )}
+            {isAdmin && (
               <Link href="/dashboard" onClick={() => setOpen(false)} className="text-sm font-medium text-foreground/80">
                 Dashboard
+              </Link>
+            )}
+            {isBarber && (
+              <Link href="/portal" onClick={() => setOpen(false)} className="text-sm font-medium text-foreground/80">
+                Barber Portal
               </Link>
             )}
             {status === "authenticated" ? (

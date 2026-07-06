@@ -37,21 +37,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-  callbacks: {
-    ...authConfig.callbacks,
-    jwt: async ({ token, user }) => {
-      if (user) {
-        token.role = user.role;
-        token.id = user.id;
-      }
-      return token;
-    },
-    session: async ({ session, token }) => {
-      if (session.user) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as "CLIENT" | "ADMIN" | "BARBER";
-      }
-      return session;
-    },
-  },
+  // jwt/session/authorized callbacks come from ...authConfig above —
+  // shared verbatim with the Edge middleware instance in proxy.ts.
 });
