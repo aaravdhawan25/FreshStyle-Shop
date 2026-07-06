@@ -33,4 +33,5 @@ export async function updateAppointmentStatus(
 
   revalidatePath("/dashboard/appointments");
   revalidatePath("/dashboard");
+  revalidatePath("/portal");
 }

@@ -4,6 +4,7 @@ import "./globals.css";
 import { SessionProvider } from "@/components/session-provider";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { WalkInBanner } from "@/components/walk-in-banner";
 import { auth } from "@/auth";
 
 const geistSans = Geist({
@@ -42,6 +43,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <SessionProvider session={session}>
+          <WalkInBanner />
           <Navbar />
           <main className="flex-1 flex flex-col">{children}</main>
           <Footer />

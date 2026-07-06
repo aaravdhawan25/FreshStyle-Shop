@@ -1,28 +1,15 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
 import { SHOP_TIME_ZONE, formatDateInZone, zonedDayBounds } from "@/lib/timezone";
 
 export default async function DashboardOverview() {
-  const session = await auth();
-  const isAdmin = session!.user.role === "ADMIN";
-
-  const barber = isAdmin
-    ? null
-    : await prisma.barber.findUnique({ where: { userId: session!.user.id } });
-
   // "Today" means today in the shop's timezone, not the server's — Vercel
   // runs in UTC, which would otherwise roll the day over hours too early/late.
   const { start: todayStart, end: todayEnd } = zonedDayBounds(formatDateInZone(new Date()));
 
-  const where = {
-    startTime: { gte: todayStart, lt: todayEnd },
-    ...(barber ? { barberId: barber.id } : {}),
-  };
-
   const [todaysAppointments, upcomingCount, revenueServices] = await Promise.all([
     prisma.appointment.findMany({
-      where,
+      where: { startTime: { gte: todayStart, lt: todayEnd } },
       include: { client: true, service: true, barber: { include: { user: true } } },
       orderBy: { startTime: "asc" },
     }),
@@ -30,11 +17,10 @@ export default async function DashboardOverview() {
       where: {
         startTime: { gte: todayEnd },
         status: { in: ["PENDING", "CONFIRMED"] },
-        ...(barber ? { barberId: barber.id } : {}),
       },
     }),
     prisma.appointment.findMany({
-      where: { status: "COMPLETED", ...(barber ? { barberId: barber.id } : {}) },
+      where: { status: "COMPLETED" },
       include: { service: true },
     }),
   ]);
@@ -46,9 +32,7 @@ export default async function DashboardOverview() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl text-foreground">
-        {isAdmin ? "Shop Overview" : "Your Day"}
-      </h1>
+      <h1 className="font-display text-3xl text-foreground">Shop Overview</h1>
 
       <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-border bg-surface p-6">
@@ -91,9 +75,7 @@ export default async function DashboardOverview() {
               <p className="text-foreground">
                 {appt.client.name} &middot; {appt.service.name}
               </p>
-              {isAdmin && (
-                <p className="text-xs text-muted">with {appt.barber.user.name}</p>
-              )}
+              <p className="text-xs text-muted">with {appt.barber.user.name}</p>
             </div>
             <div className="text-right">
               <p className="text-sm text-gold-soft">

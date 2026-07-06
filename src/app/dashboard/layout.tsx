@@ -14,7 +14,7 @@ export default async function DashboardLayout({
 }) {
   const session = await auth();
 
-  if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "BARBER")) {
+  if (!session?.user || session.user.role !== "ADMIN") {
     redirect("/login?callbackUrl=/dashboard");
   }
 
@@ -22,7 +22,7 @@ export default async function DashboardLayout({
     <div className="mx-auto flex w-full max-w-6xl flex-1 gap-8 px-6 py-12">
       <aside className="hidden w-56 shrink-0 sm:block">
         <p className="mb-4 text-xs uppercase tracking-widest text-muted">
-          {session.user.role === "ADMIN" ? "Admin" : "Barber"} Dashboard
+          Admin Dashboard
         </p>
         <nav className="flex flex-col gap-1">
           {navItems.map((item) => (
