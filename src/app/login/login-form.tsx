@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 
 export function LoginForm() {
   const router = useRouter();
@@ -29,8 +29,21 @@ export function LoginForm() {
       return;
     }
 
-    const callbackUrl = searchParams.get("callbackUrl") || "/book";
-    router.push(callbackUrl);
+    const explicitCallback = searchParams.get("callbackUrl");
+    if (explicitCallback) {
+      router.push(explicitCallback);
+    } else {
+      // No specific page requested this login — send each role to its own
+      // home base instead of the customer booking flow.
+      const session = await getSession();
+      if (session?.user?.role === "ADMIN") {
+        router.push("/dashboard");
+      } else if (session?.user?.role === "BARBER") {
+        router.push("/portal");
+      } else {
+        router.push("/book");
+      }
+    }
     router.refresh();
   }
 

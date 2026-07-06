@@ -41,16 +41,17 @@ export function Navbar() {
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-sm font-medium text-foreground/80 transition hover:text-gold-soft"
-            >
-              {link.label}
-            </Link>
-          ))}
-          {status === "authenticated" && (
+          {!isBarber &&
+            links.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-sm font-medium text-foreground/80 transition hover:text-gold-soft"
+              >
+                {link.label}
+              </Link>
+            ))}
+          {!isBarber && status === "authenticated" && (
             <Link
               href="/appointments"
               className="text-sm font-medium text-foreground/80 transition hover:text-gold-soft"
@@ -126,17 +127,18 @@ export function Navbar() {
       {open && (
         <div className="border-t border-border px-6 py-4 md:hidden">
           <div className="flex flex-col gap-4">
-            {links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setOpen(false)}
-                className="text-sm font-medium text-foreground/80"
-              >
-                {link.label}
-              </Link>
-            ))}
-            {status === "authenticated" && (
+            {!isBarber &&
+              links.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setOpen(false)}
+                  className="text-sm font-medium text-foreground/80"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            {!isBarber && status === "authenticated" && (
               <Link href="/appointments" onClick={() => setOpen(false)} className="text-sm font-medium text-foreground/80">
                 My Appointments
               </Link>
