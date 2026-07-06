@@ -65,7 +65,20 @@ export function BookingWizard({
     selectedSlotRef.current = selectedSlot;
   }, [selectedSlot]);
 
-  const dates = useMemo(() => nextNDateStrs(14), []);
+  // Recomputed periodically (not just once at mount) so a tab left open
+  // across midnight drops yesterday off the list on its own, without
+  // needing a page reload.
+  const [dates, setDates] = useState<string[]>(() => nextNDateStrs(14));
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDates((prev) => {
+        const fresh = nextNDateStrs(14);
+        return fresh[0] === prev[0] ? prev : fresh;
+      });
+    }, 5 * 60_000);
+    return () => clearInterval(interval);
+  }, []);
 
   const availableBarbers = useMemo(
     () => barbers.filter((b) => !serviceId || b.serviceIds.includes(serviceId)),

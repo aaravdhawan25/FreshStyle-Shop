@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import type { AppointmentStatus } from "@prisma/client";
 import { updateAppointmentStatus } from "@/app/dashboard/appointments/actions";
 import { SHOP_TIME_ZONE } from "@/lib/timezone";
+import { StatusIcon } from "@/components/status-icon";
 
 const statusStyles: Record<AppointmentStatus, string> = {
   PENDING: "text-amber-400",
@@ -55,6 +56,7 @@ export function PortalAppointmentRow({
         )}
       </div>
       <div className="flex items-center gap-3">
+        <StatusIcon status={appointment.status} />
         <span
           className={`text-xs font-medium uppercase ${statusStyles[appointment.status]}`}
         >

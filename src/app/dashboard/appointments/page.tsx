@@ -23,6 +23,7 @@ export default async function AppointmentsPage() {
               <th className="px-6 py-3">When</th>
               <th className="px-6 py-3">Price</th>
               <th className="px-6 py-3">Status</th>
+              <th className="px-6 py-3 text-center">Scheduled</th>
               <th className="px-6 py-3">Actions</th>
             </tr>
           </thead>
@@ -45,7 +46,7 @@ export default async function AppointmentsPage() {
             ))}
             {appointments.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-6 py-8 text-center text-muted">
+                <td colSpan={8} className="px-6 py-8 text-center text-muted">
                   No appointments yet.
                 </td>
               </tr>
