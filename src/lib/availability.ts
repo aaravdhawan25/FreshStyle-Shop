@@ -1,7 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { getDayOfWeek, zonedDayBounds, zonedTimeToUtc } from "@/lib/timezone";
 
-const SLOT_INCREMENT_MIN = 15;
+const SLOT_INCREMENT_MIN = 30;
+
+// Every barber gets the same daily lunch break — no appointments are
+// bookable in this window regardless of who's working.
+const LUNCH_BREAK = { start: "12:00", end: "12:30" };
 
 function timeStringToMinutes(time: string): number {
   const [h, m] = time.split(":").map(Number);
@@ -57,6 +61,10 @@ export async function getAvailableSlots(
       end: a.endTime,
     })),
     ...timeOffBlocks.map((t) => ({ start: t.startsAt, end: t.endsAt })),
+    {
+      start: zonedTimeToUtc(dateStr, LUNCH_BREAK.start),
+      end: zonedTimeToUtc(dateStr, LUNCH_BREAK.end),
+    },
   ];
 
   const now = new Date();
