@@ -1,6 +1,6 @@
-# Fresh Style Barbershop
+# Avex Barber Lounge
 
-A native booking system for Fresh Style Barbershop, built with Next.js (App Router), Tailwind CSS, Prisma, and NextAuth.
+A native booking system for Avex Barber Lounge, built with Next.js (App Router), Tailwind CSS, Prisma, and NextAuth.
 
 ## Architecture
 
@@ -8,7 +8,7 @@ A native booking system for Fresh Style Barbershop, built with Next.js (App Rout
 - **Styling**: Tailwind CSS v4 with a custom dark/gold barbershop theme
 - **Database**: PostgreSQL via Prisma ORM (tested against a live Supabase Postgres instance)
 - **Auth**: NextAuth v5 (Credentials provider, JWT sessions, Prisma adapter) with `Role` = `CLIENT` | `ADMIN` | `BARBER`
-- **Route protection**: `src/proxy.ts` (Next 16's renamed middleware) gates `/dashboard/*` to `ADMIN`/`BARBER` roles and redirects signed-in users away from `/login` and `/register`
+- **Route protection**: `src/proxy.ts` (Next 16's renamed middleware) gates `/dashboard/*` to `ADMIN`, `/portal/*` to `BARBER`, `/appointments/*` to any signed-in user, and redirects signed-in users away from `/login` and `/register`
 
 ### Data model (`prisma/schema.prisma`)
 
@@ -25,9 +25,9 @@ A native booking system for Fresh Style Barbershop, built with Next.js (App Rout
 2. The client-side wizard (`src/app/book/booking-wizard.tsx`) walks the user through service → barber → date/time → confirm.
 3. `POST /api/appointments` requires an authenticated session, re-validates the slot server-side, and relies on the DB unique constraint as a final race-condition guard.
 
-### Admin/Barber dashboard
+### Admin dashboard and barber portal
 
-`/dashboard` shows today's schedule and revenue; `/dashboard/appointments` lists and lets staff update appointment status. Barbers only see their own appointments; admins see everything.
+`/dashboard` (admin-only) shows shop-wide today's schedule, revenue, and cancellations; `/dashboard/appointments` lists and lets admins update any appointment's status; `/dashboard/barbers` lets admins add or remove barbers. `/portal` (barber-only) shows a barber's own schedule, stats, and lets them update the status of their own appointments.
 
 ## Local setup
 
@@ -59,8 +59,8 @@ A live Supabase project (`fresh-style-barbershop`, ref `lntfqjvwevfygwntwmhp`) a
 4. `npx prisma generate` and `npm run dev`.
 
 Seeded accounts (password shown is the plaintext used to seed):
-- Admin: `admin@freshstylebarbershop.com` / `Admin123!`
-- Barber: `marcus@freshstylebarbershop.com` / `Barber123!`
+- Admin: `admin@avexbarberlounge.com` / `Admin123!`
+- Barbers: `tyler@avexbarberlounge.com`, `luke@avexbarberlounge.com`, `coors@avexbarberlounge.com`, `vinny@avexbarberlounge.com`, `maine@avexbarberlounge.com`, `nash@avexbarberlounge.com`, `chance@avexbarberlounge.com` — all `Barber123!`
 - Client: `client@example.com` / `Client123!`
 
 For a brand-new database, skip the baseline step and just run `npx prisma migrate deploy && npm run db:seed`.

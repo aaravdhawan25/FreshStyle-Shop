@@ -113,13 +113,13 @@ export function ScrollHero() {
             className="absolute inset-x-0 top-[16%] px-6 text-center"
           >
             <p className="text-xs uppercase tracking-[0.5em] opacity-70">
-              North Brunswick, NJ &middot; Est. 2017
+              Lawrence Township, NJ
             </p>
-            <h1 className="font-display mt-4 text-[clamp(2.8rem,8vw,7rem)] leading-none">
-              FRESH STYLE
+            <h1 className="font-display mt-4 text-[clamp(2.4rem,7vw,6rem)] leading-none">
+              AVEX BARBER LOUNGE
             </h1>
             <p className="mt-4 text-sm uppercase tracking-[0.35em] opacity-80">
-              Sharp cuts. Sharper standards.
+              Clean fades. Sharp lines.
             </p>
           </div>
 

@@ -13,7 +13,7 @@ export function Footer() {
           <div className="flex items-center gap-3">
             <Image
               src="/logo-mark.png"
-              alt="Fresh Style Barbershop logo"
+              alt="Avex Barber Lounge logo"
               width={36}
               height={36}
               className="rounded-full"
@@ -49,9 +49,8 @@ export function Footer() {
           </ul>
         </div>
 
-        <div className="flex flex-col justify-between text-sm text-muted sm:items-end sm:text-right">
-          <p>Est. 2017</p>
-          <p className="mt-4 sm:mt-0">
+        <div className="flex flex-col justify-end text-sm text-muted sm:items-end sm:text-right">
+          <p>
             &copy; {new Date().getFullYear()} {BUSINESS.name}. All rights reserved.
           </p>
         </div>
