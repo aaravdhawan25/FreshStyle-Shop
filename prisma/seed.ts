@@ -31,7 +31,15 @@ const SERVICES: {
   { id: "svc-holiday-beard-haircuts", name: "Holiday Beard Haircuts", durationMin: 45, priceCents: 5000 },
 ];
 
-const BARBER_NAMES = ["Jeanel", "Raj", "Flaco", "Oswald", "Jeffrey", "Pedro", "Frank"];
+const BARBERS: { name: string; bio?: string }[] = [
+  { name: "Tyler" },
+  { name: "Luke" },
+  { name: "Coors" },
+  { name: "Vinny" },
+  { name: "Maine" },
+  { name: "Nash", bio: "Specializes in dreads & braids." },
+  { name: "Chance" },
+];
 
 async function main() {
   const adminPassword = await bcrypt.hash("Admin123!", 10);
@@ -39,11 +47,11 @@ async function main() {
   const clientPassword = await bcrypt.hash("Client123!", 10);
 
   const admin = await prisma.user.upsert({
-    where: { email: "admin@freshstylebarbershop.com" },
+    where: { email: "admin@avexbarberlounge.com" },
     update: {},
     create: {
       name: "Shop Owner",
-      email: "admin@freshstylebarbershop.com",
+      email: "admin@avexbarberlounge.com",
       passwordHash: adminPassword,
       role: "ADMIN",
     },
@@ -76,8 +84,8 @@ async function main() {
   );
 
   const barbers = await Promise.all(
-    BARBER_NAMES.map(async (name) => {
-      const email = `${name.toLowerCase()}@freshstylebarbershop.com`;
+    BARBERS.map(async ({ name, bio }) => {
+      const email = `${name.toLowerCase()}@avexbarberlounge.com`;
       const user = await prisma.user.upsert({
         where: { email },
         update: {},
@@ -86,9 +94,10 @@ async function main() {
 
       return prisma.barber.upsert({
         where: { userId: user.id },
-        update: { services: { set: services.map((s) => ({ id: s.id })) } },
+        update: { bio, services: { set: services.map((s) => ({ id: s.id })) } },
         create: {
           userId: user.id,
+          bio,
           services: { connect: services.map((s) => ({ id: s.id })) },
         },
       });
@@ -107,7 +116,7 @@ async function main() {
 
   console.log({
     admin: admin.email,
-    barbers: BARBER_NAMES.map((n) => `${n.toLowerCase()}@freshstylebarbershop.com`),
+    barbers: BARBERS.map(({ name }) => `${name.toLowerCase()}@avexbarberlounge.com`),
     client: client.email,
   });
 }

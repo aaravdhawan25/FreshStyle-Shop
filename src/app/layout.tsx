@@ -24,9 +24,9 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Fresh Style Barbershop",
+  title: "Avex Barber Lounge",
   description:
-    "Book your next cut, shave, or trim at Fresh Style Barbershop in North Brunswick, NJ — precision grooming, no walk-in wait.",
+    "Book your next cut, shave, or trim at Avex Barber Lounge in Lawrence Township, NJ — precision grooming, no walk-in wait.",
 };
 
 export default async function RootLayout({

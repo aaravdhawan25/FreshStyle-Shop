@@ -24,7 +24,7 @@ export function Navbar() {
         <Link href="/" className="flex items-center gap-3">
           <Image
             src="/logo-mark.png"
-            alt="Fresh Style Barbershop logo"
+            alt="Avex Barber Lounge logo"
             width={40}
             height={40}
             className="rounded-full"
@@ -32,10 +32,10 @@ export function Navbar() {
           />
           <span className="flex flex-col leading-tight">
             <span className="font-display text-lg tracking-wide text-gold-soft">
-              FRESH STYLE
+              AVEX
             </span>
             <span className="text-[10px] uppercase tracking-[0.3em] text-muted">
-              Barbershop
+              Barber Lounge
             </span>
           </span>
         </Link>
